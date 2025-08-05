@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
 from app.db import models, schemas
+from app.db.models import Progress
+from app.db.schemas import ProgressCreate
 
 # create a course
 def create_course(db: Session, course: schemas.CourseCreate):
@@ -84,32 +86,24 @@ def delete_structure(db: Session, structure_id: int):
     return structure
 
 # Create a prerequisite
-def add_prerequisite(db: Session, data: schemas.PrerequisiteCreate):
-    item = models.Prerequisite(**data.dict())
-    db.add(item)
+def add_prerequisite(db: Session, data: schemas.PrerequisiteCreate) -> models.Prerequisite:
+    prerequisite = models.Prerequisite(structure_id=data.structure_id, 
+                                       prerequisite_id=data.prerequisite_id)
+    db.add(prerequisite)
     db.commit()
-    db.refresh(item)
-    return item        
+    db.refresh(prerequisite)
+    return prerequisite      
 
 def get_prerequisites(db: Session, structure_id: int):
     return db.query(models.Prerequisite).filter(models.Prerequisite.structure_id == structure_id).all()
      
      
-def update_progress(db: Session, data: schemas.ProgressUpdata):
-    record = db.query(models.Progress).filter(
-        models.Progress.student_id == data.student_id,
-        models.Progress.structure_id == data.structure_id
-    ).first()
-    
-    if record:
-        record.is_completed = data.is_completed
-    else:
-        record = models.Progress(**data.dict())
-        db.add(record)
+def track_progress(db: Session, data: ProgressCreate) -> Progress:
+    progress = Progress(student=data.student, structure_id=data.structure_id)
+    db.add(progress)
     db.commit()
-    db.refresh(record)
-    return record
+    db.refresh(progress)
+    return progress
 
-def get_progress(db: Session, student_id: int):
-    return db.query(models.Progress).filter(models.Progress.student_id == student_id).all()   
-                 
+def get_progress_for_user(db: Session, student: str):
+    return db.query(Progress).filter(Progress.student == student).all()

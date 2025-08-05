@@ -1,0 +1,30 @@
+body {
+  font-family: sans-serif;
+  max-width: 600px;
+  margin: auto;
+  padding: 1rem;
+}
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+input[type="text"],
+input[type="number"] {
+  padding: 8px;
+  font-size: 1rem;
+}
+button {
+  padding: 10px;
+  background-color: #0077cc;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+button:hover {
+  background-color: #005fa3;
+}
+#progress-list {
+  margin-top: 1rem;
+}

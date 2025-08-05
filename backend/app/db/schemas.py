@@ -57,22 +57,25 @@ class CourseResourceOut(CourseResourceCreate):
         
 class PrerequisiteCreate(BaseModel):
     structure_id: int
-    required_structure_id: int
+    prerequisite_id: int
     
 class PrerequisiteOut(PrerequisiteCreate):
     id: int
+    structure_id: int
+    prerequisite_id: int
 
     class Config:
         orm_mode = True
         
-class ProgressUpdata(BaseModel):
-    student_id: int
+class ProgressCreate(BaseModel):
+    student: str
     structure_id: int
-    is_completed: bool = False
-    
-class ProgressOut(ProgressUpdata):
+
+class ProgressOut(BaseModel):
     id: int
+    student: str
+    structure_id: int
 
     class Config:
-        orm_mode = True       
+        orm_mode = True  
         

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, Date
+from sqlalchemy import Column, Integer, String, Boolean, Date, ForeignKey
 from app.db.database import Base
 
 class Course(Base):
@@ -37,18 +37,18 @@ class CourseResourse(Base):
     notes = Column(String, nullable=True)
     
     
+# pre-requisites for courses
 class Prerequisite(Base):
     __tablename__ = "prerequisites"
     
     id = Column(Integer, primary_key=True, index=True)
-    structure_id = Column(Integer, nullable=False)
-    required_structure_id = Column(Integer, nullable=False)
+    structure_id = Column(Integer, ForeignKey("course_structure.id"), nullable=False)
+    prerequisite_id = Column(Integer, ForeignKey("course_structure.id"), nullable=False)
     
 # track progress
 class Progress(Base):
     __tablename__ = "progress"
-    
     id = Column(Integer, primary_key=True, index=True)
-    student_id = Column(Integer, nullable=False)
-    structure_id = Column(Integer, nullable=False)
-    is_completed = Column(Boolean, default=False)
+    structure_id = Column(Integer, ForeignKey("course_structure.id"), nullable=False)
+    student = Column(String, nullable=False)
+    

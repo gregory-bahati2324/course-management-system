@@ -1,8 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 import shutil
 import os
 from sqlalchemy.orm import Session
 from typing import List
+from app.db import models, schemas
+from fastapi import Depends
+
 
 
 
@@ -79,11 +82,12 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @router.post("/structure/upload/", response_model=schemas.CourseResourceOut)
 def upload_file_resource(
-    structure_id: int,
-    title: str,
-    type: str,
-    notes: str = "",
-    file: UploadFile = File(...),
+    structure_id: int = Form(...),
+    title: str = Form(...),
+    type: str = Form(...),
+    notes: str = Form(""),
+    url: str = Form(""),
+    file: UploadFile = File(None),
     db: Session = Depends(get_db)
 ):
     filename = f"{UPLOAD_DIR}{file.filename}"
@@ -112,18 +116,34 @@ def edit_structure(
 def delete_structure(structure_id: int, db: Session = Depends(get_db)):
     return crud.delete_structure(db, structure_id)
 
-@router.post("structure/prerequisite/", response_model=schemas.PrerequisiteOut)
-def create_prerequisite(data: schemas.PrerequisiteCreate, db: Session = Depends(get_db)):
+@router.post("/structure/prerequisite/", response_model=schemas.PrerequisiteOut)
+def create_prerequisite(
+    structure_id: int = Form(...),
+    prerequisite_id: int = Form(...),
+    db: Session = Depends(get_db)
+):
+    print("Received structure_id:", structure_id)
+    print("Received prerequisite_id:", prerequisite_id)
+
+    data = schemas.PrerequisiteCreate(
+        structure_id=structure_id,
+        prerequisite_id=prerequisite_id
+    )
     return crud.add_prerequisite(db, data)
 
-@router.get("structure/{structure_id}/prerequisites/", response_model=List[schemas.PrerequisiteOut])
-def get_structure_prerequisites(structure_id: int, db: Session = Depends(get_db)):
-    return crud.get_prerequisites(db, structure_id)
+@router.get("/structure/{structure_id}/prerequisites", response_model=List[schemas.PrerequisiteOut])
+def get_prerequisites(structure_id: int, db: Session = Depends(get_db)):
+    return db.query(models.Prerequisite).filter(models.Prerequisite.structure_id == structure_id).all()
 
-@router.post("/progress/", response_model=schemas.ProgressOut)
-def set_progress(data: schemas.ProgressUpdata, db: Session = Depends(get_db)):
-    return crud.update_progress(db, data)
+@router.post("/structure/progress/", response_model=schemas.ProgressOut)
+def track_progress(
+    student: str = Form(...),
+    structure_id: int = Form(...),
+    db: Session = Depends(get_db)
+):
+    data = schemas.ProgressCreate(student=student, structure_id=structure_id)
+    return crud.track_progress(db, data)
 
-@router.get("/progress/{student_id}", response_model=List[schemas.ProgressOut])
-def view_progress(student_id: int, db: Session = Depends(get_db)):
-    return crud.get_progress(db, student_id)
+@router.get("/structure/progress/{student}", response_model=List[schemas.ProgressOut])
+def get_user_progress(student: str, db: Session = Depends(get_db)):
+    return crud.get_progress_for_user(db, student)

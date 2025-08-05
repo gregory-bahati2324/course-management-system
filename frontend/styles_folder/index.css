@@ -1,0 +1,51 @@
+/* index.css – Homepage styles */
+
+body {
+  background-color: #eef5ff;
+  font-family: 'Segoe UI', sans-serif;
+  padding: 40px;
+  text-align: center;
+  color: #2a3b4c;
+}
+
+h1 {
+  font-size: 32px;
+  color: #2a3b4c;
+  margin-bottom: 30px;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+li {
+  margin: 15px 0;
+}
+
+a {
+  text-decoration: none;
+  color: #0077cc;
+  font-size: 18px;
+  font-weight: bold;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: #005fa3;
+}
+
+/* Make it look good on phones */
+@media (max-width: 600px) {
+  body {
+    padding: 20px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  a {
+    font-size: 16px;
+  }
+}

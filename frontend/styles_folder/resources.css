@@ -1,0 +1,72 @@
+/* resources.css – Styling for uploading and viewing content resources */
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #fffdf5;
+  padding: 20px;
+  max-width: 900px;
+  margin: auto;
+  color: #333;
+}
+
+h1, h2 {
+  color: #2e4053;
+}
+
+form {
+  background: #fff9ec;
+  padding: 20px;
+  border: 1px solid #f1c40f;
+  border-radius: 6px;
+  margin-top: 20px;
+}
+
+input, textarea, select, button {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+button {
+  background: #f39c12;
+  color: white;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #d68910;
+}
+
+#resource-list {
+  margin-top: 30px;
+  padding: 15px;
+  background: #fafafa;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+#resource-list div {
+  border-bottom: 1px solid #eee;
+  padding: 10px 0;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  body {
+    padding: 10px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  input, textarea, select, button {
+    font-size: 14px;
+  }
+}

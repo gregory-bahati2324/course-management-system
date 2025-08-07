@@ -21,6 +21,14 @@ class CourseStructureCreate(BaseModel):
     
 class CourseOut(BaseModel):
     id: int
+    title: str
+    description: str
+    objectives: str
+    start_date: date
+    end_date: date
+    visibility: str
+    instructor: str
+    is_published: bool
     
     class Config:
         orm_mode = True

@@ -29,7 +29,7 @@ def create_course(course: schemas.CourseCreate, db: Session = Depends(get_db)):
 
 
 # Read all courses
-@router.get("/", response_model=List[schemas.CoursePreview])
+@router.get("/", response_model=List[schemas.CourseOut])
 def get_courses(db: Session = Depends(get_db)):
     return crud.get_all_courses(db)
 

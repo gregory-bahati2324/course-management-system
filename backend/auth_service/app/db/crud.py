@@ -186,31 +186,38 @@ def update_user(db: Session, user_id: UUID, data: schemas.UpdateUser):
     return schemas.UserOut(id=db_user.id, is_active=db_user.is_active, profile=profile_data)
 
 
-def delete_user(db: Session, user_id: UUID):
+def delete_user(db: Session, user_id: str):
     """Delete a user and their profile safely."""
-    db_user = db.query(models.User).filter(models.User.id == str(user_id)).first()
+    # Make sure user_id is a string
+    user_id = str(user_id)
+    
+    # Fetch main user
+    db_user = db.query(models.User).filter(models.User.id == user_id).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # -------------------
-    # Delete profile first based on role
-    # -------------------
+    # Delete profile safely
     if db_user.role == schemas.UserRole.ADMIN:
-        db.query(models.AdminProfile).filter(models.AdminProfile.id == db_user.id).delete()
+        profile = db.query(models.AdminProfile).filter(models.AdminProfile.id == user_id).first()
+        if profile:
+            db.delete(profile)
 
     elif db_user.role == schemas.UserRole.INSTRUCTOR:
-        db.query(models.InstructorProfile).filter(models.InstructorProfile.id == db_user.id).delete()
+        profile = db.query(models.InstructorProfile).filter(models.InstructorProfile.id == user_id).first()
+        if profile:
+            db.delete(profile)
 
     elif db_user.role == schemas.UserRole.STUDENT:
-        db.query(models.StudentProfile).filter(models.StudentProfile.id == db_user.id).delete()
+        profile = db.query(models.StudentProfile).filter(models.StudentProfile.id == user_id).first()
+        if profile:
+            db.delete(profile)
 
-    # -------------------
-    # Delete the main user record
-    # -------------------
+    # Delete main user
     db.delete(db_user)
     db.commit()
 
     return {"detail": "User and profile deleted successfully"}
+
 
 
 

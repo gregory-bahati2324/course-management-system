@@ -1,0 +1,30 @@
+backend
+├── app
+│   ├── api
+│   │   ├── courses.py
+│   │   └── __pycache__
+│   │       └── courses.cpython-312.pyc
+│   └── db
+│       ├── crud.py
+│       ├── database.py
+│       ├── models.py
+│       ├── __pycache__
+│       │   ├── crud.cpython-312.pyc
+│       │   ├── database.cpython-312.pyc
+│       │   ├── models.cpython-312.pyc
+│       │   └── schemas.cpython-312.pyc
+│       └── schemas.py
+├── main.py
+├── __pycache__
+│   └── main.cpython-312.pyc
+├── requirements.txt
+├── structure.txt
+├── test.db
+├── test_db.py
+└── uploads
+    ├── API_ILO_country_YU.csv
+    ├── certificate_and_diploma.pdf
+    ├── cleaned_wine_data.csv
+    └── js_files.zip
+
+8 directories, 20 files

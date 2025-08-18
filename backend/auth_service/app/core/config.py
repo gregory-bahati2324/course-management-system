@@ -2,6 +2,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./test.db"
+    USER_SERVICE_DB_URL: str = "sqlite:///./user_service.db"
     
     SECRET_KEY : str = "super-secret-key"
     

@@ -105,15 +105,17 @@ def update_student(
     return crud.update_user(db, current_user.id, data)
 
 
-@router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/delete/{user_id}", status_code=204)
 def delete_user(
     user_id: UUID,
     current_user: schemas.UserOut = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db)
 ):
-    """Delete a user (self or admin only)."""
-    if str(current_user["id"]) != str(user_id) and current_user["profile"].__class__.__name__.lower() != "adminprofile":
-        raise HTTPException(status_code=403, detail="You can only delete your own account")
+    # Only allow deletion if the user is deleting their own account
+    # or if the current user is an admin
+    if str(current_user.id) != str(user_id) and current_user.profile.__class__.__name__.lower() != "adminprofile":
+        raise HTTPException(status_code=403, detail="Not authorized to delete this user")
 
     crud.delete_user(db, user_id)
-    return {"detail": "User deleted"}
+    return {"detail": "User deleted successfully"}
+

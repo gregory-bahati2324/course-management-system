@@ -39,7 +39,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect email or password")
 
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    token = create_access_token(data={"sub": user.email}, expire_delta=access_token_expires)
+    token = create_access_token(data={"sub": user.email, "role": user.role, "user_id": str(user.id)}, expire_delta=access_token_expires)
 
     return {"access_token": token, "token_type": "bearer", "user_id": str(user.id)}
 

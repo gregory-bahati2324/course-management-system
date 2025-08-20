@@ -20,8 +20,8 @@ def create_course(db: Session, course: course_schemas.CourseCreate) -> course_sc
 
 def create_enrollment(db: Session, enrollment: course_schemas.EnrollmentCreate) -> course_schemas.EnrollmentOut:
     db_enrollment = course_models.Enrollment(
-        course_id=enrollment.course_id,
-        student_id=enrollment.student_id
+        course_id=str(enrollment.course_id),
+        student_id=str(enrollment.student_id)
     )
     db.add(db_enrollment)
     db.commit()
@@ -40,7 +40,11 @@ def create_module(db: Session, module: course_schemas.ModuleCreate) -> course_sc
     db.refresh(db_module)
     return course_schemas.ModuleOut.from_orm(db_module)
 
-def create_lesson(db: Session, lesson: course_schemas.LessonCreate) -> course_schemas.LessonOut:
+def create_lesson(
+    db: Session, 
+    lesson: course_schemas.LessonCreate, 
+    module_id: str
+) -> course_schemas.LessonOut:
     db_lesson = course_models.Lesson(
         title=lesson.title,
         content=lesson.content,
@@ -48,12 +52,13 @@ def create_lesson(db: Session, lesson: course_schemas.LessonCreate) -> course_sc
         position=lesson.position,
         video_url=lesson.video_url,
         document_url=lesson.document_url,
-        module_id=lesson.module_id
+        module_id=module_id   # ✅ use the path param, not lesson.module_id
     )
     db.add(db_lesson)
     db.commit()
     db.refresh(db_lesson)
     return course_schemas.LessonOut.from_orm(db_lesson)
+
 
 def search_courses(db: Session, filters: course_schemas.CourseFilter, limit: int = 100):
     query = db.query(course_models.Course)
@@ -75,7 +80,7 @@ def search_courses(db: Session, filters: course_schemas.CourseFilter, limit: int
         
     return query.order_by(course_models.Course.created_at.desc()).limit(limit).all()     
 
-def get_course(db: Session, course_id: UUID):
+def get_course(db: Session, course_id: str) -> course_models.Course:
     """Retrive a single course by id"""
     return db.query(course_models.Course).filter(
         course_models.Course.id == course_id

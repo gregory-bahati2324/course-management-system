@@ -31,9 +31,9 @@ def enroll_in_course(
     current_user: dict = Depends(get_current_user)
 ):
     # verify current user is a student
-    if str(enrollment.student_id) != str(current_user.get("user_id")):
-        raise HTTPException(status_code=403, detail="You are not authorized to enroll in this course.")
-    
+    if current_user["role"] != "student":
+        raise HTTPException(status_code=403, detail="Only students can enroll in courses")
+
     return course_crud.create_enrollment(db=db, enrollment=enrollment)
 
 @router.post("/courses/{course_id}/modules/", response_model=course_schemas.ModuleOut)
@@ -43,38 +43,44 @@ def create_module(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
+    course_id = str(course_id)
+    module.course_id = str(module.course_id)
     # verify course exist and user is instructor
     db_course = course_crud.get_course(db, course_id)
-    if not db_course or str(db_course.instructor_id) != current_user["user_id"]:
-        raise HTTPException(status_code=4004, detail="Course not found or not authorized")
+    if not db_course or current_user["role"] != "instructor":
+        raise HTTPException(status_code=404, detail="Course not found or not authorized")
 
     return course_crud.create_module(db, module)
+
 @router.post("/modules/{module_id}/lessons", response_model=course_schemas.LessonOut)
 def create_module_lesson(
-    module_id: uuid.UUID,
+    module_id: str,
     lesson: course_schemas.LessonCreate,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    # verify module exist and user is instructor
+    # verify module exist
     db_module = db.query(course_models.Module).filter(
         course_models.Module.id == module_id
     ).first()
     
     if not db_module:
-        raise HTTPException(status_code=404, detail="module not found")
+        raise HTTPException(status_code=404, detail="Module not found")
     
+    # check authorization
     db_course = course_crud.get_course(db, db_module.course_id)
-    if str(db_course.instructor_id) != current_user["user_id"]:
-        raise HTTPException(status_code=403, detail="unauthorized")
+    if current_user["role"] != "instructor":
+        raise HTTPException(status_code=403, detail="Unauthorized")
     
-    return course_crud.create_lesson(db, lesson)
+    # ✅ pass module_id explicitly
+    return course_crud.create_lesson(db, lesson, module_id)
+
 
 @router.get("/courses/search", response_model=List[course_schemas.CourseOut])
-def search_courses(
+def Search_courses(
     search: Optional[str] = Query(None),
     category: Optional[str] = Query(None),
-    instructor_id: Optional[uuid.UUID] = Query(None),
+    instructor_id: Optional[str] = Query(None),
     is_published: Optional[bool] = Query(None),
     db: Session = Depends(get_db)
 ):
@@ -84,5 +90,5 @@ def search_courses(
         instructor_id=instructor_id,
         is_published=is_published
     )
-    return search_courses(db, filters)
+    return course_crud.search_courses(db, filters)
     

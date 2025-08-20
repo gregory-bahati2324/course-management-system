@@ -59,7 +59,7 @@ class LessonBase(BaseModel):
     
     
 class LessonCreate(LessonBase):
-    module_id: uuid.UUID
+    module_id: str
     
 class LessonOut(LessonBase):
     id: uuid.UUID

@@ -47,3 +47,12 @@ class Lesson(Base):
     position = Column(Integer, nullable=False)
     video_url = Column(String(255), nullable=True)
     document_url = Column(String(255), nullable=True)
+    
+class LessonProgress(Base):
+    __tablename__ = "lesson_progress"
+
+    id = Column(String, primary_key=True, index=True, default=lambda: str(uuid.uuid4()))
+    lesson_id = Column(String, ForeignKey("lessons.id"), nullable=False)
+    student_id = Column(String, index=True, nullable=False)
+    completed_at = Column(DateTime, default=datetime.utcnow)  
+    progress_percentage = Column(Integer, default=0, nullable=False)  

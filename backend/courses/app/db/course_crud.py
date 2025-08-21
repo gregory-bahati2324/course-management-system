@@ -85,3 +85,36 @@ def get_course(db: Session, course_id: str) -> course_models.Course:
     return db.query(course_models.Course).filter(
         course_models.Course.id == course_id
     ).first()      
+    
+def mark_lesson_complete(db: Session, progress: course_schemas.LessonProgressCreate) -> course_schemas.LessonProgressOut:
+    db_progress = course_models.LessonProgress(
+        lesson_id=str(progress.lesson_id),
+        student_id=progress.student_id,
+        progress_percentage=100  # Assuming completion means 100% progress
+    )
+    db.add(db_progress)
+    db.commit()
+    db.refresh(db_progress)
+    return db_progress
+
+def get_lesson_progress(db: Session, lesson_id: str, student_id: str) -> course_models.LessonProgress:
+    return db.query(course_models.LessonProgress).filter(
+        course_models.LessonProgress.lesson_id == lesson_id,
+        course_models.LessonProgress.student_id == student_id
+    ).first()
+    
+   
+def get_course_progress(db: Session, course_id: str, student_id: str):
+    """Get all lesson progress for a specific course and student"""
+    lesson = db.query(course_models.Lesson).filter_by(
+        module_id=course_id
+    ).all()
+    completed_lessons = db.query(course_models.LessonProgress).filter_by(
+        student_id=student_id
+    ).join(course_models.Lesson).filter(course_models.Lesson.module_id == course_id).all()
+    
+    return {
+        "total_lessons": len(lesson),
+        "completed_lessons": len(completed_lessons),
+        "is_course_completed": len(lesson) > 0 and len(completed_lessons) == len(lesson),
+        "progress_percentage": (len(completed_lessons) / len(lesson)) * 100 if lesson else 0}

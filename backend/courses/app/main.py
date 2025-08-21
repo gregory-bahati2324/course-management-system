@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from app.routes.courses import router
 from app.db.course_database import Base, engine
-from app.models import course_models  # make sure this import happens BEFORE create_all
+from app.models import course_models, course_event_model  # make sure this import happens BEFORE create_all
 
 # Force all models to be registered before creating tables
 Base.metadata.create_all(bind=engine)

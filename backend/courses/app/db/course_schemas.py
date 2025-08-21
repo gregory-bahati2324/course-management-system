@@ -67,7 +67,7 @@ class LessonOut(LessonBase):
     created_at: datetime = datetime.utcnow()
     
     class Config:
-        from_attributes = True
+        from_attributes = True      
         
         
 # search and filter schemas
@@ -77,4 +77,21 @@ class CourseFilter(BaseModel):
     instructor_id: Optional[str] = None
     is_published: Optional[bool] = None
     duration_days: Optional[int] = Field(None, ge=0, description="Minimum duration in days for filtering courses")
-                                           
+     
+     
+class LessonProgressCreate(BaseModel):
+    lesson_id: uuid.UUID
+    student_id: str
+    progress_percentage: int = Field(0, ge=0, le=100, description="Progress percentage for the lesson")
+    
+class LessonProgressOut(LessonProgressCreate):
+    id: uuid.UUID
+    lesson_id: uuid.UUID
+    student_id: str
+    completed_at: datetime = datetime.utcnow()
+    progress_percentage: int = Field(0, ge=0, le=100, description="Progress percentage for the lesson")
+
+    class Config:
+        from_attributes = True    
+        
+                                                   

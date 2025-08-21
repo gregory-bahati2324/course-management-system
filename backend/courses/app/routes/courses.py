@@ -4,9 +4,9 @@ from uuid import UUID
 import uuid
 from typing import List, Optional
 from app.db.course_database import get_db
-from app.db import course_crud
-from app.db import course_schemas
-from app.models import course_models
+from app.db import course_crud, event_based_crud
+from app.db import course_schemas, course_event_schemas
+from app.models import course_models, course_event_model
 from app.core.security import get_current_user
 
 router = APIRouter()
@@ -91,4 +91,87 @@ def Search_courses(
         is_published=is_published
     )
     return course_crud.search_courses(db, filters)
+
+@router.post("/lessons/{lesson_id}/complete", response_model=course_schemas.LessonProgressOut)
+def complete_lesson(
+    lesson_id: str,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    # verify current user is a student
+    if current_user["role"] != "student":
+        raise HTTPException(status_code=403, detail="Only students can complete lessons")
+
+    # check if lesson exists
+    db_lesson = db.query(course_models.Lesson).filter(
+        course_models.Lesson.id == lesson_id
+    ).first()
+    if not db_lesson:
+        raise HTTPException(status_code=404, detail="Lesson not found")
     
+    progress_in_db = course_crud.get_lesson_progress(db, lesson_id, current_user["user_id"])
+    if progress_in_db:
+        raise HTTPException(status_code=400, detail="Lesson already completed")
+
+    # mark lesson as complete
+    progress = course_schemas.LessonProgressCreate(
+        lesson_id=lesson_id,
+        student_id=current_user["user_id"],
+        progress_percentage=100
+    )
+    return course_crud.mark_lesson_complete(db, progress)
+
+
+# Get progress for a single course
+@router.get("/lessons/{lesson_id}/progress/{student_id}")
+def get_lesson_progress(
+    lesson_id: str,
+    student_id: str,
+    db: Session = Depends(get_db)
+):
+    progress = course_crud.get_lesson_progress(db, lesson_id, student_id)
+    if not progress:
+        return {"lesson_id": lesson_id, "student_id": student_id, "progress_percentage": 0, "completed": False}
+    
+    return {
+        "lesson_id": lesson_id,
+        "student_id": student_id,
+        "progress_percentage": progress.progress_percentage,
+        "completed": progress.progress_percentage == 100
+    }
+    
+# Get progress for a course
+@router.get("/courses/{course_id}/progress/{student_id}")
+def get_course_progress(
+    course_id: str,
+    student_id: str,
+    db: Session = Depends(get_db)
+):
+    progress = course_crud.get_course_progress(db, course_id, student_id)
+    if not progress:
+        return {"course_id": course_id, "student_id": student_id, "total_lessons": 0, "completed_lessons": 0, "is_course_completed": False, "progress_percentage": 0}
+    
+    return {
+        "course_id": course_id,
+        "student_id": student_id,
+        "total_lessons": progress["total_lessons"],
+        "completed_lessons": progress["completed_lessons"],
+        "is_course_completed": progress["is_course_completed"],
+        "progress_percentage": progress["progress_percentage"]
+    }   
+    
+@router.post("/lessons/progress/event", response_model=course_event_schemas.LessonProgressOut)  
+def track_event(
+    event: course_event_schemas.LessonProgressEvent,
+    db: Session = Depends(get_db)
+):
+    """Record a lesson progress event (e.g., opened, completed)"""
+    return event_based_crud.record_event(db, event)
+
+@router.get("/lessons/{lesson_id}/progress/{student_id}", response_model=course_event_schemas.LessonProgressOut)
+def get_lesson_progress_event(lesson_id: str, student_id: str, db: Session = Depends(get_db)):
+    """Get the progress of a specific lesson for a student"""
+    return db.query(course_event_model.LessonProgress).filter_by(
+        lesson_id=lesson_id,
+        student_id=student_id
+    ).first() 

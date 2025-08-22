@@ -1,5 +1,6 @@
 from sqlalchemy import Column, String, Integer, Boolean, Text, DateTime, ForeignKey
 from app.db.course_database import Base
+from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
 
@@ -47,6 +48,8 @@ class Lesson(Base):
     position = Column(Integer, nullable=False)
     video_url = Column(String(255), nullable=True)
     document_url = Column(String(255), nullable=True)
+    
+    materials = relationship("LessonMaterial", back_populates="lesson", cascade="all, delete-orphan")
     
 class LessonProgress(Base):
     __tablename__ = "lesson_progress"

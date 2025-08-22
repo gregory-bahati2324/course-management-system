@@ -59,6 +59,12 @@ def create_lesson(
     db.refresh(db_lesson)
     return course_schemas.LessonOut.from_orm(db_lesson)
 
+# Get a lesson by ID
+def get_lesson(db: Session, lesson_id: str) -> course_models.Lesson:
+    return db.query(course_models.Lesson).filter(
+        course_models.Lesson.id == lesson_id
+    ).first()
+
 
 def search_courses(db: Session, filters: course_schemas.CourseFilter, limit: int = 100):
     query = db.query(course_models.Course)

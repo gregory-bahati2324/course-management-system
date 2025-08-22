@@ -1,12 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
+from fastapi.responses import FileResponse
+from pathlib import Path
 from sqlalchemy.orm import Session
 from uuid import UUID
 import uuid
+from typing import List
 from typing import List, Optional
 from app.db.course_database import get_db
-from app.db import course_crud, event_based_crud
-from app.db import course_schemas, course_event_schemas
+from app.db import course_crud, event_based_crud, lesson_material_crud
+from app.db import course_schemas, course_event_schemas, lesson_material_schemas
 from app.models import course_models, course_event_model
+from app.db.lesson_material_crud import save_lesson_material, get_lesson_materials, get_lesson_material_by_id
+from app.db.lesson_material_schemas import LessonMaterialResponse
 from app.core.security import get_current_user
 
 router = APIRouter()
@@ -140,6 +145,21 @@ def get_lesson_progress(
         "completed": progress.progress_percentage == 100
     }
     
+    
+# get course details
+@router.get("/lessons/{lesson_id}", response_model=lesson_material_schemas.LessonDetail)
+def get_lesson_details(
+    lesson_id: str,
+    db: Session = Depends(get_db)
+):
+    lesson = lesson_material_crud.get_lesson_details(db, lesson_id)
+    if not lesson:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+
+    return lesson
+
+# 
+
 # Get progress for a course
 @router.get("/courses/{course_id}/progress/{student_id}")
 def get_course_progress(
@@ -175,3 +195,47 @@ def get_lesson_progress_event(lesson_id: str, student_id: str, db: Session = Dep
         lesson_id=lesson_id,
         student_id=student_id
     ).first() 
+    
+    
+# Upload lesson materials
+@router.post("/lessons/{lesson_id}/materials/", response_model=List[LessonMaterialResponse])
+def upload_lesson_materials(
+    lesson_id: str,
+    files: List[UploadFile] = File(...),
+    db: Session = Depends(get_db)
+):
+    lesson = db.query(course_models.Lesson).filter(
+        course_models.Lesson.id == lesson_id
+    ).first()
+    
+    if not lesson:
+        raise HTTPException(status_code=404, detail="Lesson not found")
+    
+    return save_lesson_material(db, lesson_id, files)
+
+# Download lesson material
+@router.get("/lessons/{lesson_id}/materials", response_model=List[LessonMaterialResponse])
+def list_lesson_materials(
+    lesson_id: str,
+    db: Session = Depends(get_db)
+):
+    materials = get_lesson_materials(db, lesson_id)
+    if not materials:
+        raise HTTPException(status_code=404, detail="No materials found for this lesson")
+    return materials
+
+# Download specific lesson material by ID
+@router.get("/materials/{material_id}/download")
+def download_lesson_material(
+    material_id: str,
+    db: Session = Depends(get_db)
+):
+    material = get_lesson_material_by_id(db, material_id)
+    if not material:
+        raise HTTPException(status_code=404, detail="Material not found")
+    
+    file_url = Path(material.file_url)
+    if not file_url.exists() or not file_url.is_file():
+        raise HTTPException(status_code=404, detail="File not found on server")
+
+    return FileResponse(path=file_url, filename=file_url.name, media_type='application/octet-stream')

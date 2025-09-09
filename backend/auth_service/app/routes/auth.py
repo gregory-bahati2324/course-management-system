@@ -41,7 +41,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     token = create_access_token(data={"sub": user.email, "role": user.role, "user_id": str(user.id)}, expire_delta=access_token_expires)
 
-    return {"access_token": token, "token_type": "bearer", "user_id": str(user.id)}
+    return {"access_token": token, "token_type": "bearer", "user_id": str(user.id), "role": user.role}
 
 
 @router.get("/users/me", response_model=schemas.UserOut)
